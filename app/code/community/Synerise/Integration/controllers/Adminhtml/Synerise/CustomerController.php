@@ -4,8 +4,6 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
 
     private $snr = null;
 
-    private $apiKey = null;
-
     /**
      * @var Synerise_Integration_Helper_Data
      */
@@ -13,16 +11,11 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
 
     public function _construct()
     {
-        $this->tracker = Mage::getStoreConfig('synerise_integration/tracking/code');
-        $this->apiKey = Mage::getStoreConfig('synerise_integration/api/key');
-        $this->helper = $helper = Mage::helper('synerise_integration/data');                
+        $this->helper = Mage::helper('synerise_integration/tracker');
         
         try {
-            $this->snr = Synerise\SyneriseTracker::getInstance([ //@todo wynieść do helpera
-                'apiKey' => $this->apiKey,
-                'apiVersion' => '2.1.0',
-                'allowFork' => false
-            ]);
+
+            $this->snr = $this->helper->getInstance();
 
             $this->snr->setPathLog(Mage::getBaseDir('var') . DS . 'log' . DS . 'synerise.log');
         } catch (Exception $e) {
@@ -48,7 +41,7 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
         $sent = 0;
         
         if(!$customerCollection->getSize()) {
-            $this->_getSession()->addSuccess($this->_getHelper()->__('Orders already sent.'));
+            $this->_getSession()->addSuccess($this->helper->__('Orders already sent.'));
         } else {
 
             do {
@@ -83,9 +76,9 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
             } while ($currentPage <= $pages);        
 
             if($sent) {             
-                 $this->_getSession()->addSuccess($this->_getHelper()->__('%s customers sent.', $sent));
+                 $this->_getSession()->addSuccess($this->helper->__('%s customers sent.', $sent));
             } else {
-                $this->_getSession()->addError($this->_getHelper()->__('No customers sent.'));
+                $this->_getSession()->addError($this->helper->__('No customers sent.'));
             }
             
         }
