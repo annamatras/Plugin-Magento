@@ -1,7 +1,4 @@
 <?php
-
-require_once Mage::getBaseDir() . '/vendor/autoload.php';
-
 class Synerise_Integration_Model_Observer
 {
 

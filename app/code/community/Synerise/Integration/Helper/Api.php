@@ -1,12 +1,12 @@
 <?php
-require_once Mage::getBaseDir().'/vendor/autoload.php';
-
 class Synerise_Integration_Helper_Api extends Mage_Core_Helper_Abstract
 {
     public $defaults = array();
     
     public function __construct()
     {
+        Synerise_Integration_Helper_Autoloader::createAndRegister();
+
         $this->defaults = array(
             'apiKey' => Mage::getStoreConfig('synerise_integration/api/key'),
             'apiVersion' => '1.0'            

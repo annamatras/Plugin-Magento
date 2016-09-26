@@ -1,6 +1,4 @@
 <?php
-require_once Mage::getBaseDir().'/vendor/autoload.php';
-
 class Synerise_Coupon_Model_CouponManager extends Mage_Core_Model_Abstract
 {
     protected $_allowedValues = array(

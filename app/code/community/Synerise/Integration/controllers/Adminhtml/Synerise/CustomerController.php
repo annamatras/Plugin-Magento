@@ -1,6 +1,4 @@
 <?php
-require_once Mage::getBaseDir() . '/vendor/autoload.php';
-
 class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Adminhtml_Controller_Action {
 
 
