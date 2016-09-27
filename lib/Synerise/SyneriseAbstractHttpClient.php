@@ -18,7 +18,7 @@ abstract class SyneriseAbstractHttpClient extends Client
     ];
 
     /** @var string */
-    const DEFAULT_CONTENT_TYPE = 'application/x-www-form-urlencoded';
+    const DEFAULT_CONTENT_TYPE = 'application/json';
 
     /** @var string */
     const DEFAULT_ACCEPT_HEADER = 'application/json';
