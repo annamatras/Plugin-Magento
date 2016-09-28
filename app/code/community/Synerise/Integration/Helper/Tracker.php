@@ -1,7 +1,6 @@
 <?php
 class Synerise_Integration_Helper_Tracker extends Mage_Core_Helper_Abstract
 {
-
     public $defaults = array();
     
     public function __construct()
@@ -175,5 +174,4 @@ class Synerise_Integration_Helper_Tracker extends Mage_Core_Helper_Abstract
     {
         return !empty($attr)?$attr:false;
     }
-
 }

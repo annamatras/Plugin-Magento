@@ -10,14 +10,11 @@ class Synerise_Coupon_Model_CouponManager extends Mage_Core_Model_Abstract
 
     protected function _construct()
     {
-        $syneriseCouponInstance = Synerise\SyneriseCoupon::getInstance([
-            'apiKey' => Mage::getStoreConfig('synerise_integration/api/key'),
-            'apiVersion' => '2.0'
-        ]);
-        $syneriseCouponInstance->setPathLog(Mage::getBaseDir('var') . DS . 'log' . DS . 'synerise_coupon.log');
-        $syneriseCouponInstance->setDefaultOption('verify', false);
+        $couponInstance = Mage::helper('synerise_integration/api')->getInstance('Client', array('apiVersion' => '2.0' ));
+        $couponInstance->setPathLog(Mage::getBaseDir('var') . DS . 'log' . DS . 'synerise_coupon.log');
+        $couponInstance->setDefaultOption('verify', false);
         
-        $this->setSyneriseCouponInstance($syneriseCouponInstance);
+        $this->setSyneriseCouponInstance($couponInstance);
     }
     
     /*
