@@ -10,7 +10,7 @@ class Synerise_Coupon_Model_CouponManager extends Mage_Core_Model_Abstract
 
     protected function _construct()
     {
-        $couponInstance = Mage::helper('synerise_integration/api')->getInstance('Client', array('apiVersion' => '2.0' ));
+        $couponInstance = Mage::helper('synerise_integration/api')->getInstance('Coupon', array('apiVersion' => '2.0'));
         $couponInstance->setPathLog(Mage::getBaseDir('var') . DS . 'log' . DS . 'synerise_coupon.log');
         $couponInstance->setDefaultOption('verify', false);
         
