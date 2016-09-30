@@ -1,12 +1,7 @@
 <?php
 namespace Synerise;
 
-use InvalidArgumentException;
 use GuzzleHttp\Client;
-use GuzzleHttp\Event\ErrorEvent;
-use GuzzleHttp\Ring\Client\MockHandler;
-use GuzzleHttp\Collection;
-
 
 abstract class SyneriseAbstractHttpClient extends Client
 {
@@ -64,40 +59,11 @@ abstract class SyneriseAbstractHttpClient extends Client
      */
     public function __construct($config = array())
     {
-        parent::__construct($config);
-        $config = Collection::fromConfig($config, static::getDefaultConfig(), static::$required);
-        $this->configure($config);
-    }
+        $config = self::mergeConfig($config);
 
-    /**
-     * Configures the client by setting the appropriate headers, service description and error handling
-     *
-     * @param Collection $config
-     */
-    protected function configure($config)
-    {
-        $this->setDefaultOption('headers', $this->margeHeaders($config));
         $this->setErrorHandler();
-    }
-
-    /**
-     * Marge headers default and custom
-     *
-     * @return array
-     */
-    private function margeHeaders($config)
-    {
-        $default = $this->getDefaultConfig();
-
-        $apiVersion = $config->get('apiVersion');
-        $configHeaders = $config->get('headers');
-        $defaultHeaders = $default['headers'];
-
-        $headers = $configHeaders + $defaultHeaders;
-        $headers['Api-Key'] = $config->get('apiKey');
-        $headers['Api-Version'] = empty($apiVersion) ? self::DEFAULT_API_VERSION : $config->get('apiVersion');
-
-        return $headers;
+        
+        parent::__construct($config);
     }
 
     /**
@@ -107,13 +73,12 @@ abstract class SyneriseAbstractHttpClient extends Client
      */
     private function setErrorHandler()
     {
-        $this->getEmitter()->on('error', function (ErrorEvent $e) {
+//        $this->getEmitter()->on('error', function (ErrorEvent $e) {
             //@TODO ErrorHendler
             //if ($e->getResponse()->getStatusCode() >= 400 && $e->getResponse()->getStatusCode() < 600) {
             //}
-        });
+//        });
     }
-
 
     /**
      * Gets the default configuration options for the client
@@ -123,11 +88,12 @@ abstract class SyneriseAbstractHttpClient extends Client
     public static function getDefaultConfig()
     {
         return [
-            'base_url' => self::BASE_API_URL,
+            'base_uri' => self::BASE_API_URL,
             'headers' => [
                 'Content-Type' => self::DEFAULT_CONTENT_TYPE,
                 'Accept' => self::DEFAULT_ACCEPT_HEADER,
                 'User-Agent' => self::USER_AGENT,
+                'Api-Version' => self::DEFAULT_API_VERSION,
             ]
         ];
     }
@@ -162,6 +128,38 @@ abstract class SyneriseAbstractHttpClient extends Client
             file_put_contents($this->_pathLog, print_r("----------------\n" .
                 date("Y-m-d H:i:s") . " $tag: \n " . (string)$message . "\n", true), FILE_APPEND);
         }
+    }
+
+    /**
+     * Merge config with defaults
+     *
+     * @param array $config   Configuration values to apply.
+     *
+     * @return array
+     * @throws \InvalidArgumentException if a parameter is missing
+     */
+    protected function mergeConfig(array $config = []) {
+
+        $defaults = static::getDefaultConfig();
+        $required = static::$required;
+
+        $data = $config + $defaults;
+
+        if ($missing = array_diff($required, array_keys($data))) {
+            throw new \InvalidArgumentException(
+                'Config is missing the following keys: ' .
+                implode(', ', $missing));
+        }
+
+        if(isset($config['apiKey'])) {
+            $data['headers']['Api-Key'] = $config['apiKey'];
+        }
+
+        if(isset($config['apiVersion'])) {
+            $data['headers']['Api-Version'] = $config['apiVersion'];
+        }
+
+        return ($data);
     }
 
 }

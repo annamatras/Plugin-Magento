@@ -118,7 +118,7 @@ class SyneriseTracker extends SyneriseAbstractHttpClient
     public static function getDefaultConfig()
     {
         return [
-            'base_url' => self::BASE_TCK_URL,
+            'base_uri' => self::BASE_TCK_URL,
             'headers' => [
                 'Content-Type' => self::DEFAULT_CONTENT_TYPE,
                 'Accept' => self::DEFAULT_ACCEPT_HEADER,
