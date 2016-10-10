@@ -157,6 +157,7 @@ class Synerise_Integration_Helper_Autoloader
             $autoloader = new self;
             $autoloader
                 ->addNamespace('Psr\Http\Message', $libBaseDir . '/Psr/http-message')
+                ->addNamespace('Psr\Log', $libBaseDir . '/Psr/log')
                 ->addNamespace('GuzzleHttp\Psr7', $libBaseDir . '/GuzzleHttp/psr7')
                 ->addNamespace('GuzzleHttp\Promise', $libBaseDir . '/GuzzleHttp/promises')
                 ->addNamespace('GuzzleHttp', $libBaseDir . '/GuzzleHttp/guzzle')

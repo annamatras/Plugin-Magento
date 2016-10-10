@@ -2,6 +2,9 @@
 namespace Synerise;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\MessageFormatter;
 
 abstract class SyneriseAbstractHttpClient extends Client
 {
@@ -43,12 +46,12 @@ abstract class SyneriseAbstractHttpClient extends Client
      * @param array $config
      * @return SyneriseAbstractHttpClient
      */
-    public static function getInstance($config = array())
+    public static function getInstance($config = array(), $logger = null)
     {
         $class = get_called_class();
 
         if (!isset(self::$_instances[$class])) {
-            self::$_instances[$class] = new $class($config);
+            self::$_instances[$class] = new $class($config, $logger);
         }
         return self::$_instances[$class];
     }
@@ -57,9 +60,28 @@ abstract class SyneriseAbstractHttpClient extends Client
      * Instantiates a new instance.
      * @param array $config
      */
-    public function __construct($config = array())
+    public function __construct($config = array(), $logger = null)
     {
         $config = self::mergeConfig($config);
+
+        $stack = HandlerStack::create();
+
+        if($logger) {
+
+            if ($logger instanceof \Psr\Log\LoggerInterface ) {
+                $stack->push(
+                    Middleware::log(
+                        $logger,
+                        new MessageFormatter("\n----------------\n{req_headers}\n\n{req_body}"
+                            . "\n----------------\n{res_headers}\n\n{res_body}\n----------------\n")
+                    )
+                );
+            } else {
+                throw new \Exception('Logger must implement PsrLogLoggerInterface');
+            }
+        }
+
+        $config['handler'] = $stack;
 
         $this->setErrorHandler();
         

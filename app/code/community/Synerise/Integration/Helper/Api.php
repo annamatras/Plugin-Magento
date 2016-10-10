@@ -15,8 +15,10 @@ class Synerise_Integration_Helper_Api extends Mage_Core_Helper_Abstract
     
     public function getInstance($client, $options = array())
     {
+        $logger = Mage::getModel('synerise_integration/Logger');
+
         $class = 'Synerise\Synerise'.$client;
-        return $class::getInstance(array_merge($this->defaults, $options));
+        return $class::getInstance(array_merge($this->defaults, $options), $logger);
     }
     
     public function validateApiKey($apiKey)

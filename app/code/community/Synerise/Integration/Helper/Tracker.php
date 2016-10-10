@@ -16,8 +16,10 @@ class Synerise_Integration_Helper_Tracker extends Mage_Core_Helper_Abstract
     
     public function getInstance($options = array())
     {
+        $logger = Mage::getModel('synerise_integration/Logger');
+
         $class = 'Synerise\SyneriseTracker';
-        return $class::getInstance(array_merge($this->defaults, $options));
+        return $class::getInstance(array_merge($this->defaults, $options), $logger);
     }
     
     /**
