@@ -17,7 +17,6 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
 
             $this->snr = $this->helper->getInstance();
 
-            $this->snr->setPathLog(Mage::getBaseDir('var') . DS . 'log' . DS . 'synerise.log');
         } catch (Exception $e) {
             Mage::logException($e);
         }        

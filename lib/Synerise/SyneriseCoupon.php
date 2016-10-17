@@ -2,13 +2,6 @@
 namespace Synerise;
 
 use Synerise\Exception\SyneriseException;
-use Synerise\Producers\Client;
-use Synerise\Producers\Event;
-use GuzzleHttp\Pool;
-use GuzzleHttp\Collection;
-use GuzzleHttp\Ring\Client\MockHandler;
-use GuzzleHttp\Subscriber\History;
-use GuzzleHttp\Message;
 
 class SyneriseCoupon extends SyneriseAbstractHttpClient
 {
@@ -30,15 +23,17 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
              * @var Response
              */
             if (!isset($this->_cache[$code])) {
-                $request = $this->createRequest("GET", SyneriseAbstractHttpClient::BASE_API_URL . '/coupons/active/' . $code);
-                $this->_log($request, "Coupon");
-                $response = $this->send($request);
+                $response = $this->get(SyneriseAbstractHttpClient::BASE_API_URL . '/coupons/active/' . $code);
 
-                $this->_log($response, "Coupon");
-                $class = 'GuzzleHttp\\Message\\Response';
-                if ($response instanceof $class && $response->getStatusCode() == '200') {
-                    $json = $response->json();
-                    if (isset($json['data']) && $json['data']['coupon']) {
+                if ($response->getStatusCode() == '200') {
+
+                    if ($response->getStatusCode() != '200') {
+                        throw new Exception\SyneriseException('API Synerise not responsed 200.', 500);
+                    }
+
+                    $json = json_decode($response->getBody(), true);
+
+                    if (isset($json['data']) && isset($json['data']['coupon'])) {
                         $activeCoupon = new Response\ActiveCoupon($json['data']);
                         $this->_cache[$code] = $activeCoupon;
                     }
@@ -51,7 +46,9 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
 
 
         } catch (\Exception $e) {
-            $this->_log($e->getMessage(), "CouponERROR");
+            if($this->getLogger()) {
+                $this->getLogger()->alert($e->getMessage());
+            }
             throw $e;
         }
 
@@ -65,26 +62,20 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
     {
 
         try {
-            $request = $this->createRequest("GET", SyneriseAbstractHttpClient::BASE_API_URL . '/admin/coupons/');
-            $this->_log($request, "Coupons");
-            $response = $this->send($request);
+            $response = $this->get(SyneriseAbstractHttpClient::BASE_API_URL . '/admin/coupons/');
 
-            $this->_log($response, "Coupons");
-            $class = 'GuzzleHttp\\Message\\Response';
-            if ($response instanceof $class && $response->getStatusCode() == '200') {
+            if ($response->getStatusCode() == '200') {
                 $collection = array();
-                $json = $response->json();
+                $json = json_decode($response->getBody(), true);
                 if(isset($json['data']) && isset($json['data']['coupons'])) {
-                    $collection = new \GuzzleHttp\Collection();
                     foreach($json['data']['coupons'] as $key => $item) {
-                        $collection->add($key, new Response\Coupon($item));
+                        $collection[$key] = (new Response\Coupon($item));
                     }
                     return $collection;
                 } else {
                     throw new SyneriseException('Missing "data" in API resonse.', SyneriseException::API_RESPONSE_INVALID);
                 }
-                die;
-                return new Response\Coupon($response->json());
+                return new Response\Coupon($json);
             } else {
                 throw new SyneriseException('API Synerise not responsed 200.', SyneriseException::API_RESPONSE_ERROR);
             }
@@ -92,7 +83,9 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
             return false;
 
         } catch (\Exception $e) {
-            $this->_log($e->getMessage(), "CouponERROR");
+            if($this->getLogger()) {
+                $this->getLogger()->alert($e->getMessage());
+            }
             throw $e;
         }
 
@@ -113,11 +106,11 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
                 unset($this->_cache[$code]);
             }
 
-            $this->_log('USE '.$code, "Coupon");
             $response = $this->post(SyneriseAbstractHttpClient::BASE_API_URL . "/coupons/active/$code/use");
-            $this->_log($response, "Coupon");
+
             if ($response->getStatusCode() == '200') {
-                $responseArray = $response->json();
+                $responseArray = json_decode($response->getBody(), true);
+
                 switch ($responseArray['code']) {
                     case 1:
                         return true;
@@ -132,27 +125,51 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
             throw new Exception\SyneriseException('API Synerise not responsed 200.', 500);
 
         } catch (\Exception $e) {
-            $this->_log($e->getMessage(), "CouponERROR");
+            if($this->getLogger()) {
+                $this->getLogger()->alert($e->getMessage());
+            }
             throw $e;
         }
+        return false;
     }
 
-    public function activateCoupon($couponUuid,$clientUuid)
+    public function activateCoupon($couponUuid, $clientUuid = null)
     {
         try {
+            $response = $this->post(SyneriseAbstractHttpClient::BASE_API_URL . "/coupons/$couponUuid/activate");
 
-            $request = $this->createRequest("POST", SyneriseAbstractHttpClient::BASE_API_URL . "/coupons/$couponUuid/activate");
-            $this->_log($request, "Activate");
-            
-            $response = $this->send($request);
-            $this->_log($response, "Coupon");
-            
             if ($response->getStatusCode() != '200') {
                 throw new Exception\SyneriseException('API Synerise not responsed 200.', 500);
             }
 
+            $responseArray = json_decode($response->getBody(), true);
+            return isset($responseArray['data']) ? $responseArray['data'] : null;
+
         } catch (\Exception $e) {
-            $this->_log($e->getMessage(), "CouponERROR");
+            if($this->getLogger()) {
+                $this->getLogger()->alert($e->getMessage());
+            }
+            throw $e;
+        }
+
+    }
+
+    public function updateCoupon($couponUuid, $parameters)
+    {
+        try {
+            $response = $this->patch(SyneriseAbstractHttpClient::BASE_API_URL . "/coupons/$couponUuid",  array('json' => $parameters));
+
+            if ($response->getStatusCode() != '200') {
+                throw new Exception\SyneriseException('API Synerise not responsed 200.', 500);
+            }
+
+            $responseArray = json_decode($response->getBody(), true);
+            return isset($responseArray['data']) ? $responseArray['data'] : null;
+
+        } catch (\Exception $e) {
+            if($this->getLogger()) {
+                $this->getLogger()->alert($e->getMessage());
+            }
             throw $e;
         }
     }

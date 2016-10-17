@@ -1,14 +1,6 @@
 <?php
 namespace Synerise;
 
-use Synerise\Exception\SyneriseException;
-use Synerise\Producers\Client;
-use Synerise\Producers\Event;
-use GuzzleHttp\Pool;
-use GuzzleHttp\Ring\Client\MockHandler;
-use GuzzleHttp\Subscriber\History;
-use GuzzleHttp\Message;
-
 class SyneriseClient extends SyneriseAbstractHttpClient
 {
 
@@ -22,20 +14,17 @@ class SyneriseClient extends SyneriseAbstractHttpClient
     public function getClientByParameter(array $fields)
     {
         try {
-            $request = $this->createRequest("GET", SyneriseAbstractHttpClient::BASE_API_URL . '/client/?' . http_build_query($fields), array(
-                'headers' => array ('content-type' => 'application/json')
-            ));
+            $response = $this->get(SyneriseAbstractHttpClient::BASE_API_URL . '/client/?' . http_build_query($fields));
             
-            $this->_log($request, 'CLIENT');
-            $response = $this->send($request);
-            $this->_log($response, 'CLIENT');
+            $responseArray = json_decode($response->getBody(), true);
+            return isset($responseArray['data']) ? $responseArray['data'] : null;
 
-            return $response;
-
-        } catch (\Exception $e) {
-            $this->_log($e->getMessage(), "ClientERROR");
-            throw $e;
-        }
+            } catch (\Exception $e) {
+                if($this->getLogger()) {
+                    $this->getLogger()->alert($e->getMessage());
+                }
+                throw $e;
+            }
     }
 
     public function batchAddOrUpdateClients(array $items)
@@ -48,21 +37,22 @@ class SyneriseClient extends SyneriseAbstractHttpClient
         }
         
         if(!empty($data)) {
-
             try {
-                $request = $this->createRequest("POST", SyneriseAbstractHttpClient::BASE_API_URL . '/client/batch', array(
-                    'headers' => array ('content-type' => 'application/json'),
+                $response = $this->post(SyneriseAbstractHttpClient::BASE_API_URL . '/client/batch', array(
                     'json' => array('items' => $data)
                 ));    
-                
-                $this->_log($request, 'CLIENT');
-                $response = $this->send($request);
-                $this->_log($response, 'CLIENT');
 
-                return $response->json();
-                
+                if ($response->getStatusCode() != '200') {
+                    throw new Exception\SyneriseException('API Synerise not responsed 200.', 500);
+                }
+
+                $responseArray = json_decode($response->getBody(), true);
+                return isset($responseArray['data']) ? $responseArray['data'] : null;
+
             } catch (\Exception $e) {
-                $this->_log($e->getMessage(), "ClientsERROR");
+                if($this->getLogger()) {
+                    $this->getLogger()->alert($e->getMessage());
+                }
                 throw $e;
             }
         }

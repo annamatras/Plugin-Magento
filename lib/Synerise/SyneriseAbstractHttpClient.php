@@ -2,9 +2,8 @@
 namespace Synerise;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
-use GuzzleHttp\MessageFormatter;
+use Synerise\Adapter\Guzzle5 as Guzzle5Adapter;
+use Synerise\Adapter\Guzzle6 as Guzzle6Adapter;
 
 abstract class SyneriseAbstractHttpClient extends Client
 {
@@ -22,10 +21,10 @@ abstract class SyneriseAbstractHttpClient extends Client
     const DEFAULT_ACCEPT_HEADER = 'application/json';
 
     /** @var string */
-    const USER_AGENT = 'synerise-php-sdk/2.1';
+    const USER_AGENT = 'synerise-php-sdk';
 
     /** @var string */
-    const DEFAULT_API_VERSION = '2.1';
+    const DEFAULT_API_VERSION = '3.0';
 
     /** @var string */
     const BASE_API_URL = 'http://api.synerise.com';
@@ -33,13 +32,7 @@ abstract class SyneriseAbstractHttpClient extends Client
     /** @var string */
     const BASE_TCK_URL = 'http://tck.synerise.com/sdk-proxy';
 
-
     private static $_instances = array();
-
-    protected $_pathLog = './var/log/synerise.log';
-
-    protected $_log = true;
-
 
     /**
      * Returns a singleton instance of SyneriseAbstractHttpClient
@@ -62,30 +55,21 @@ abstract class SyneriseAbstractHttpClient extends Client
      */
     public function __construct($config = array(), $logger = null)
     {
-        $config = self::mergeConfig($config);
+        $this->_logger = $logger;
 
-        $stack = HandlerStack::create();
-
-        if($logger) {
-
-            if ($logger instanceof \Psr\Log\LoggerInterface ) {
-                $stack->push(
-                    Middleware::log(
-                        $logger,
-                        new MessageFormatter("\n----------------\n{req_headers}\n\n{req_body}"
-                            . "\n----------------\n{res_headers}\n\n{res_body}\n----------------\n")
-                    )
-                );
-            } else {
-                throw new \Exception('Logger must implement PsrLogLoggerInterface');
-            }
-        }
-
-        $config['handler'] = $stack;
-
-        $this->setErrorHandler();
-        
-        parent::__construct($config);
+        switch (substr(self::VERSION,0,1)):
+            case '6':
+                $config = Guzzle6Adapter::prepareConfig(self::mergeConfig($config), $logger);
+                parent::__construct($config);
+                break;
+            case '5':
+                $config = Guzzle5Adapter::prepareConfig(self::mergeConfig($config), $logger);
+                parent::__construct($config);
+                $this->setDefaultOption('headers', $config['headers']);
+                break;
+            default:
+                throw new \Exception('Unsupported Guzzle version. Please use Guzzle 6.x or 5.x.');
+        endswitch;
     }
 
     /**
@@ -95,11 +79,7 @@ abstract class SyneriseAbstractHttpClient extends Client
      */
     private function setErrorHandler()
     {
-//        $this->getEmitter()->on('error', function (ErrorEvent $e) {
             //@TODO ErrorHendler
-            //if ($e->getResponse()->getStatusCode() >= 400 && $e->getResponse()->getStatusCode() < 600) {
-            //}
-//        });
     }
 
     /**
@@ -110,11 +90,11 @@ abstract class SyneriseAbstractHttpClient extends Client
     public static function getDefaultConfig()
     {
         return [
-            'base_uri' => self::BASE_API_URL,
+            'base_url' => self::BASE_API_URL,
             'headers' => [
                 'Content-Type' => self::DEFAULT_CONTENT_TYPE,
                 'Accept' => self::DEFAULT_ACCEPT_HEADER,
-                'User-Agent' => self::USER_AGENT,
+                'User-Agent' => self::USER_AGENT.'/'.self::DEFAULT_API_VERSION,
                 'Api-Version' => self::DEFAULT_API_VERSION,
             ]
         ];
@@ -125,7 +105,6 @@ abstract class SyneriseAbstractHttpClient extends Client
      */
     protected function getUuid()
     {
-
         $snrsP = isset($_COOKIE['_snrs_p'])?$_COOKIE['_snrs_p']:false;
         if ($snrsP) {
             $snrsP = explode('&', $snrsP);
@@ -139,17 +118,9 @@ abstract class SyneriseAbstractHttpClient extends Client
         return false;
     }
 
-    public function setPathLog($pathFile)
+    public function getLogger()
     {
-        $this->_pathLog = $pathFile;
-    }
-
-    public function _log($message, $tag)
-    {
-        if ($this->_log) {
-            file_put_contents($this->_pathLog, print_r("----------------\n" .
-                date("Y-m-d H:i:s") . " $tag: \n " . (string)$message . "\n", true), FILE_APPEND);
-        }
+        return $this->_logger;
     }
 
     /**
@@ -179,6 +150,7 @@ abstract class SyneriseAbstractHttpClient extends Client
 
         if(isset($config['apiVersion'])) {
             $data['headers']['Api-Version'] = $config['apiVersion'];
+            $data['headers']['User-Agent'] = self::USER_AGENT.'/'.$config['apiVersion'];
         }
 
         return ($data);

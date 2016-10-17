@@ -43,12 +43,9 @@ class SyneriseTracker extends SyneriseAbstractHttpClient
 
         parent::__construct($config);
 
-		$this->client = Producers\Client::getInstance();
-		$this->event = Event::getInstance();
-		$this->transaction = Producers\Transaction::getInstance();
-
-    	$config = Collection::fromConfig($config, static::getDefaultConfig(), static::$required);
-		$this->configure($config);
+        $this->client = Producers\Client::getInstance();
+        $this->event = Event::getInstance();
+        $this->transaction = Producers\Transaction::getInstance();
 
     }
 
@@ -60,8 +57,6 @@ class SyneriseTracker extends SyneriseAbstractHttpClient
     }
 
     public function sendQueue(){
-        $history = new History();
-        $this->getEmitter()->attach($history);
 
         $data['json'] = array_merge($this->event->getRequestQueue(),
                 $this->transaction->getRequestQueue(),
@@ -70,16 +65,13 @@ class SyneriseTracker extends SyneriseAbstractHttpClient
         if(count($data['json']) == 0) {
             return;
         }
-        $request = $this->createRequest('POST', SyneriseAbstractHttpClient::BASE_TCK_URL, $data);
-        $request->setHeader('Content-Type','application/json');
 
         try {
-            $this->_log($request, 'TRACKER');
-            $response = $this->send($request);
-            $this->_log($response, 'TRACKER');
-
-        } catch(\Exception $e) {
-            $this->_log($e->getMessage(), 'TRACKER_ERROR');
+            $response = $this->post(SyneriseAbstractHttpClient::BASE_TCK_URL, $data);
+        } catch (\Exception $e) {
+            if($this->getLogger()) {
+                $this->getLogger()->alert($e->getMessage());
+            }
         }
 
         $this->flushQueue();
@@ -118,7 +110,7 @@ class SyneriseTracker extends SyneriseAbstractHttpClient
     public static function getDefaultConfig()
     {
         return [
-            'base_uri' => self::BASE_TCK_URL,
+            'base_url' => self::BASE_TCK_URL,
             'headers' => [
                 'Content-Type' => self::DEFAULT_CONTENT_TYPE,
                 'Accept' => self::DEFAULT_ACCEPT_HEADER,

@@ -15,7 +15,6 @@ class Synerise_Integration_Model_Observer
             $this->helper = Mage::helper('synerise_integration/tracker');
 
             $this->snr = $this->helper->getInstance();
-            $this->snr->setPathLog(Mage::getBaseDir('var') . DS . 'log' . DS . 'synerise.log');
 
 //            if (Mage::getSingleton('customer/session')->isLoggedIn()) {
 //                $this->snr->client->customIdentify(
