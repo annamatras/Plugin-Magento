@@ -6,7 +6,6 @@ class SyneriseClient extends SyneriseAbstractHttpClient
 
     protected $_cache = array();
 
-
     public function getClientByCustomIdentify($numberCard) {
         return $this->getClientByParameter(array('customIdentify' => $numberCard));
     }

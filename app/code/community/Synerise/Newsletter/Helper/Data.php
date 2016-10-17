@@ -31,7 +31,7 @@ class Synerise_Newsletter_Helper_Data extends Mage_Core_Helper_Abstract
             /*
              * @var Synerise\SyneriseNewsletter
              */
-            $newsletterInstance = Mage::helper('synerise_integration/api')->getInstance('Newsletter', array('apiVersion' => '1.0' ));
+            $newsletterInstance = Mage::helper('synerise_integration/api')->getInstance('Newsletter');
 
             return $newsletterInstance->subscribe($email, $postData);   
 
@@ -51,7 +51,7 @@ class Synerise_Newsletter_Helper_Data extends Mage_Core_Helper_Abstract
     
     public function updateNewsletterAgreement($email, $status)
     {
-        $clientInstance = Mage::helper('synerise_integration/api')->getInstance('Client', array('apiVersion' => '1.0' ));
+        $clientInstance = Mage::helper('synerise_integration/api')->getInstance('Client');
 
         $items = array(
             array(

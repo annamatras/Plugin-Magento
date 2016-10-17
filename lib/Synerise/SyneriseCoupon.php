@@ -12,10 +12,10 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
      * Get activated coupon details
      * 
      * @param $code
-     * @return ActiveCoupon
+     * @return Response\ActiveCoupon
      * @throws SyneriseException
      */
-    public function getActiveCoupon($code)
+    public function getActiveCoupon($code, array $options = array())
     {
 
         try {
@@ -23,7 +23,22 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
              * @var Response
              */
             if (!isset($this->_cache[$code])) {
-                $response = $this->get(SyneriseAbstractHttpClient::BASE_API_URL . '/coupons/active/' . $code);
+
+                $url = SyneriseAbstractHttpClient::BASE_API_URL . '/coupons/active/' . $code;
+
+                $defaults = array(
+                    'uuid'          => null,
+                    'token'         => null,
+                    'includeCoupon' => false
+                );
+
+                $options = array_intersect_key($options, $defaults);
+
+                if(!empty($options)) {
+                    $url .= '?'.http_build_query($options);
+                }
+
+                $response = $this->get($url);
 
                 if ($response->getStatusCode() == '200') {
 
@@ -34,7 +49,7 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
                     $json = json_decode($response->getBody(), true);
 
                     if (isset($json['data']) && isset($json['data']['coupon'])) {
-                        $activeCoupon = new Response\ActiveCoupon($json['data']);
+                        $activeCoupon = new Response\ActiveCoupon($json);
                         $this->_cache[$code] = $activeCoupon;
                     }
                 } else {
