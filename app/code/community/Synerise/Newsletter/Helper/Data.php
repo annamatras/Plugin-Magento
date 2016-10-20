@@ -11,6 +11,11 @@ class Synerise_Newsletter_Helper_Data extends Mage_Core_Helper_Abstract
         return Mage::getStoreConfig('synerise_newsletter/settings/confirm_registered');
     }
     
+    public function ajaxSubmitFlag()
+    {
+        return Mage::getStoreConfig('synerise_newsletter/settings/ajax');
+    }
+
     public function convertSyneriseStatus($status)
     {
         switch ($status):

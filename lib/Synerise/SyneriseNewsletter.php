@@ -30,7 +30,6 @@ class SyneriseNewsletter extends SyneriseAbstractHttpClient
             }
 
             try {
-                
                 $response = $this->put(SyneriseAbstractHttpClient::BASE_API_URL . "/client/subscribe",
                     array('json' => array_merge($baseParams, array('params' => $additionalParams)))
                 );
@@ -41,7 +40,7 @@ class SyneriseNewsletter extends SyneriseAbstractHttpClient
 
             } catch (RequestException $e) {
                 $responseArray = json_decode($e->getResponse()->getBody(), true);
-                $responseNewsletter = new SyneriseResponseNewsletter($responseArray);
+                $responseNewsletter = new SyneriseResponseNewsletter(array('data' => $responseArray));
                 return $responseNewsletter->fail();
             }
             

@@ -52,6 +52,9 @@ class Newsletter
         if ($this->_status == 'ok' && $this->_message == 'newsletter_request_success') {
             return $this;
         }
+        if ($this->_status == 'empty_newsletter_settings') {
+            throw new Exception\SyneriseException('Newsletter.NotConfigured', Exception\SyneriseException::EMPTY_NEWSLETTER_SETTINGS);
+        }
 
         switch ($this->_message) {
             case 'already_subscribed':
