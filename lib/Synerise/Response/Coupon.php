@@ -128,13 +128,12 @@ class Coupon extends AbstractResponse
 
     public function __construct(array $response)
     {
-        parent::__construct($response);
-
-        if(!isset($response['data'])) {
-            return;
+        if(isset($response['data'])) {
+            parent::__construct($response);
+            $data = $response['data'];
+        } else {
+            $data = $response;
         }
-
-        $data = $response['data'];
 
         $this->_uuid                    = isset($data['uuid']) ? $data['uuid'] : null;
         $this->_name                    = isset($data['name']) ? $data['name'] : null;

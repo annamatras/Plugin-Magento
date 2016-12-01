@@ -3,7 +3,7 @@ namespace Synerise\Response;
 
 use Synerise\Exception;
 
-class Newsletter
+class Newsletter extends AbstractResponse
 {
     /**
      * @var string
@@ -27,14 +27,12 @@ class Newsletter
      */
     public function __construct(array $response)
     {
-//        parent::__construct($response);
-
-
-        if(!isset($response['data'])) {
-            return;
+        if(isset($response['data'])) {
+            parent::__construct($response);
+            $data = $response['data'];
+        } else {
+            $data = $response;
         }
-
-        $data = $response['data'];
 
         $this->_status = isset($data['status']) ? $data['status'] : null;
         $this->_message = isset($data['message']) ? $data['message'] : null;

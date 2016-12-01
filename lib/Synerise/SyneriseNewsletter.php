@@ -21,8 +21,10 @@ class SyneriseNewsletter extends SyneriseAbstractHttpClient
         try {
             $baseParams = array();
             $baseParams['email'] = $email;
-            if(!empty($this->getUuid())){
-                $baseParams['uuid'] = $this->getUuid();
+            
+            $uuid = $this->getUuid();
+            if(!empty($uuid)){
+                $baseParams['uuid'] = $uuid;
             }
 
             if(isset($additionalParams['sex'])) { //@todo
@@ -30,6 +32,7 @@ class SyneriseNewsletter extends SyneriseAbstractHttpClient
             }
 
             try {
+                
                 $response = $this->put(SyneriseAbstractHttpClient::BASE_API_URL . "/client/subscribe",
                     array('json' => array_merge($baseParams, array('params' => $additionalParams)))
                 );
@@ -40,7 +43,7 @@ class SyneriseNewsletter extends SyneriseAbstractHttpClient
 
             } catch (RequestException $e) {
                 $responseArray = json_decode($e->getResponse()->getBody(), true);
-                $responseNewsletter = new SyneriseResponseNewsletter(array('data' => $responseArray));
+                $responseNewsletter = new SyneriseResponseNewsletter($responseArray);
                 return $responseNewsletter->fail();
             }
             

@@ -46,9 +46,12 @@ class ActiveCoupon extends AbstractResponse
      */
     public function __construct($response = array())
     {
-        parent::__construct($response);
-
-        $data = $response['data'];
+        if(isset($response['data'])) {
+            parent::__construct($response);
+            $data = $response['data'];
+        } else {
+            $data = $response;
+        }
 
         $this->_uuid        = isset($data['uuid']) ? $data['uuid'] : null;
         $this->_isValid     = isset($data['isValid']) ? $data['isValid'] : false;

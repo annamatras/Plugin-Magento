@@ -3,6 +3,13 @@ namespace Synerise;
 
 class SyneriseDefault extends SyneriseAbstractHttpClient
 {
+    /**
+     *
+     *
+     * @return type
+     * @throws \Synerise\Exception
+     * @throws Exception\SyneriseException
+     */
     public function test() 
     {
         try {

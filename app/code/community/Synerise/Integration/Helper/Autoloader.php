@@ -156,22 +156,19 @@ class Synerise_Integration_Helper_Autoloader
         if (!$registered) {
             $autoloader = new self;
             $autoloader
-                ->addNamespace('Psr\Http\Message', $libBaseDir . '/Psr/http-message')
-                ->addNamespace('Psr\Log', $libBaseDir . '/Psr/log')
-                ->addNamespace('GuzzleHttp\Psr7', $libBaseDir . '/GuzzleHttp/psr7')
-                ->addNamespace('GuzzleHttp\Promise', $libBaseDir . '/GuzzleHttp/promises')
                 ->addNamespace('GuzzleHttp', $libBaseDir . '/GuzzleHttp/guzzle')
+                ->addNamespace('GuzzleHttp\Ring', $libBaseDir . '/GuzzleHttp/ringphp')
+                ->addNamespace('GuzzleHttp\Stream', $libBaseDir . '/GuzzleHttp/streams')
+                ->addNamespace('GuzzleHttp\Subscriber\Log', $libBaseDir . '/GuzzleHttp/log-subscriber')
+                ->addNamespace('Psr\Log', $libBaseDir . '/Psr/log')
+                ->addNamespace('React\Promise', $libBaseDir . '/react/promise')
+                ->addNamespace('Detection', $libBaseDir . '/MobileDetect/namespaced/Detection')
                 ->addNamespace('Synerise', $libBaseDir . '/Synerise')
                 ->register();
             $registered = true;
 
-            require($libBaseDir . '/GuzzleHttp/promises/functions_include.php');
-            require($libBaseDir . '/GuzzleHttp/psr7/functions_include.php');
-            require($libBaseDir . '/GuzzleHttp/guzzle/functions_include.php');
+            require($libBaseDir . '/React/promise/functions_include.php');
         }
-
-
-
     }
 
 }

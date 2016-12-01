@@ -4,6 +4,8 @@ namespace Synerise;
 use GuzzleHttp\Client;
 use Synerise\Adapter\Guzzle5 as Guzzle5Adapter;
 use Synerise\Adapter\Guzzle6 as Guzzle6Adapter;
+use Synerise\Helper\Cookie;
+use Detection\MobileDetect as Mobile_Detect;
 
 abstract class SyneriseAbstractHttpClient extends Client
 {
@@ -27,17 +29,53 @@ abstract class SyneriseAbstractHttpClient extends Client
     const DEFAULT_API_VERSION = '3.0';
 
     /** @var string */
-    const BASE_API_URL = 'http://api.synerise.com';
+    const BASE_API_URL = 'https://api.synerise.com';
 
     /** @var string */
-    const BASE_TCK_URL = 'http://tck.synerise.com/sdk-proxy';
+    const BASE_TCK_URL = 'https://tck.synerise.com/sdk-proxy';
+
+    /** @var string */
+    const TC_HOST = 'tc.synerise.com';
+
+    /** @var string */
+    const TC_SCRIPT = 'snrs-2.0.js';
+
+    /** @var string */    
+    const JS_SDK_URL = 'https://app.synerise.com/js/sdk/synerise-javascript-sdk-latest.min.js';
+
+    const SOURCE_DESKTOP_WEB        = 'WEB_DESKTOP';
+    const SOURCE_MOBILE_APP         = 'MOBILE';
+    const SOURCE_MOBILE_WEB         = 'MOBILEWEB';
+    const SOURCE_POS                = 'POS';
+    const SOURCE_UNDEFINED          = 'UNDEFINED';
+
+    /**
+     * Client context for standard clent session.
+     * Allows cookie use.
+     *
+     * @var string
+     */
+    const APP_CONTEXT_CLIENT        = 'client';
+
+    /**
+     * System context for cli, cron, admin, etc
+     * 
+     * @var string
+     */
+    const APP_CONTEXT_SYSTEM        = 'system';
 
     private static $_instances = array();
 
+    protected $_context = self::APP_CONTEXT_CLIENT;
+
+    protected $_cookie;
+
+    protected $_apiKey = null;
+
     /**
-     * Returns a singleton instance of SyneriseAbstractHttpClient
+     * Returns a singleton instance of Synerise Client
      * @param array $config
-     * @return SyneriseAbstractHttpClient
+     * @return self
      */
     public static function getInstance($config = array(), $logger = null)
     {
@@ -56,6 +94,24 @@ abstract class SyneriseAbstractHttpClient extends Client
     public function __construct($config = array(), $logger = null)
     {
         $this->_logger = $logger;
+
+        if(isset($config['apiKey'])) {
+            $this->_apiKey = $config['apiKey'];
+        }
+
+        $this->_cookie = Cookie::getInstance();
+
+        $this->_cookie->setEmailHash('asdasd');
+
+        if(isset($config['context']) && $config['context'] == self::APP_CONTEXT_SYSTEM) {
+            $this->_context = self::APP_CONTEXT_SYSTEM;
+        } else {
+            if(!Cookie::isAllowedUse()) {
+                throw new \Exception('Cookie use not allowed.');
+            }
+            $this->_context = self::APP_CONTEXT_CLIENT;
+            $this->getUuid();
+        }
 
         switch (substr(self::VERSION,0,1)):
             case '6':
@@ -105,17 +161,24 @@ abstract class SyneriseAbstractHttpClient extends Client
      */
     protected function getUuid()
     {
-        $snrsP = isset($_COOKIE['_snrs_p']) ? $_COOKIE['_snrs_p'] : false;
-        if ($snrsP) {
-            $snrsP = explode('&', $snrsP);
-            foreach ($snrsP as $snrs_part) {
-                if (strpos($snrs_part, 'uuid:') !== false) {
-                    return str_replace('uuid:', null, $snrs_part);
-                }
+        if(empty($this->uuid) && $this->_context == self::APP_CONTEXT_CLIENT) {
+
+            $this->uuid = $this->_cookie->getUuid();
+
+            if(empty($this->uuid)) {
+                $this->setUuid($this->generateUuidV4());
             }
         }
 
-        return false;
+        return !empty($this->uuid) ? $this->uuid : null;
+    }
+
+    protected function setUuid($uuid) {
+        $this->uuid = $uuid;
+        if($this->_context == self::APP_CONTEXT_CLIENT) {
+            return $this->_cookie->setUuid($this->uuid);
+        }
+        return true;
     }
 
     public function getLogger()
@@ -131,7 +194,7 @@ abstract class SyneriseAbstractHttpClient extends Client
      * @return array
      * @throws \InvalidArgumentException if a parameter is missing
      */
-    protected function mergeConfig(array $config = []) {
+    protected function mergeConfig(array $config = array()) {
 
         $defaults = static::getDefaultConfig();
         $required = static::$required;
@@ -154,6 +217,119 @@ abstract class SyneriseAbstractHttpClient extends Client
         }
 
         return ($data);
+    }
+
+    public function hashString($string) {
+        return md5($string);
+    }
+
+    public function regenerateUuid($email) {
+        $emHash = $this->hashString($email);
+        if ($emHash) {
+            if($this->getLogger()) {
+                $this->getLogger()->notice('Generated hash "'.$emHash.'" from email "'.$email.'"');
+            }
+
+            $prevHash = $this->_cookie->getEmailHash();
+         
+            if(empty($prevHash)) {
+                if($this->_cookie->setEmailHash($emHash));
+            } else {
+                if($this->getLogger()) {
+                    $this->getLogger()->notice('Saved email hash: "'.$prevHash.'"');
+                }
+
+                if($prevHash != $emHash) {
+
+                    if($this->_cookie->setEmailHash($emHash)) {
+                        if($this->getLogger()) {
+                            $this->getLogger()->notice('Email hash has been changed !');
+                        }
+                    } else {
+                        if($this->getLogger()) {
+                            $this->getLogger()->alert('Email hash can not be changed !');
+                        }
+                    }
+
+                    $prevUuid = $this->getUuid();
+                    $newUuid = $this->generateUuidV4();
+                    if($this->setUuid($newUuid)) {
+                        if($this->getLogger()) {
+                            $this->getLogger()->notice('CHANGING UUID! "'. $prevUuid .'" to "'+ $newUuid +'"');
+                        }
+                    } else {
+                        if($this->getLogger()) {
+                            $this->getLogger()->alert('Uuid can not be changed !');
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static function generateUuidV4(){
+      return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+
+        // 32 bits for "time_low"
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+
+        // 16 bits for "time_mid"
+        mt_rand(0, 0xffff),
+
+        // 16 bits for "time_hi_and_version",
+        // four most significant bits holds version number 4
+        mt_rand(0, 0x0fff) | 0x4000,
+
+        // 16 bits, 8 bits for "clk_seq_hi_res",
+        // 8 bits for "clk_seq_low",
+        // two most significant bits holds zero and one for variant DCE1.1
+        mt_rand(0, 0x3fff) | 0x8000,
+
+        // 48 bits for "node"
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+      );
+    }
+
+    public function isMobile()
+    {
+        $detect = new Mobile_Detect;
+        return $detect->isMobile();
+    }
+
+    public function getCategoryBySource($source, $action)
+    {
+        if($source == self::SOURCE_POS) {
+            return "client.retail.pos.core";
+        } elseif($source == self::SOURCE_MOBILE_APP) {
+            return "client.mobile.application.screen";
+        } else {
+            // category trigger
+            $cTrigger = 'client';
+
+            // category env
+            $cEnv = 'web';
+
+            if($source == self::SOURCE_MOBILE_WEB) {
+                $cEnv = 'mobile';
+            }
+
+            // category source
+            $cSource = 'browser';
+
+            // category medium
+            $cMedium = 'page';
+
+            if($action == 'form.submit') {
+                $cMedium = 'contact';
+            }
+
+            return "$cTrigger.$cEnv.$cSource.$cMedium";
+        }
+    }
+
+    public function getSource()
+    {
+        return $this->isMobile() ? self::SOURCE_MOBILE_WEB : self::SOURCE_DESKTOP_WEB;
     }
 
 }
