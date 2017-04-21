@@ -1,16 +1,29 @@
 <?php
 namespace Synerise\Helper;
 
-class Cookie
+class Cookie extends HelperAbstract
 {
     const SNRS_P    = '_snrs_p';
     const SNRS_UUID = '_snrs_uuid';
 
-    protected $_data;
+    protected $_data = array();
 
     protected $_uuid;
 
-    private static $_instance;
+    protected $_context = \Synerise\SyneriseTracker::APP_CONTEXT_CLIENT;
+
+    public function __construct(array $config = array())
+    {
+        $_cookie = array();
+        if(isset($config['context']) && $config['context'] == \Synerise\SyneriseTracker::APP_CONTEXT_SYSTEM && isset($config['cookie'])) {
+            $_cookie = is_string($config['cookie']) ? json_decode($config['cookie'], true) : (array) $config['cookie'];
+        }
+
+        $this->setCookiesData((empty($_cookie) && isset($_COOKIE)) ? $_COOKIE : $_cookie);
+        if(isset($config['context'])) {
+            $this->_context = $config['context'];
+        }
+    }
 
     /**
      * Determine whether current session allows cookie use
@@ -28,10 +41,10 @@ class Cookie
      * @return string
      */
     public function getCookieString($name) {
-        if(!isset($this->data[$name])) {
-           $this->data[$name] = isset($_COOKIE[$name]) ? $_COOKIE[$name] : null;
+        if(!isset($this->_data[$name])) {
+           $this->_data[$name] = isset($_COOKIE[$name]) ? $_COOKIE[$name] : null;
         }
-        return $this->data[$name];
+        return htmlspecialchars_decode($this->_data[$name]);
     }
 
     /**
@@ -68,7 +81,7 @@ class Cookie
             if(empty($this->_uuid)) {
                 $snrsP = isset($_COOKIE['_snrs_p'])?$_COOKIE['_snrs_p']:false;
                 if ($snrsP) {
-                    $snrsP = explode('&', $snrsP);
+                    $snrsP = explode('&', htmlspecialchars_decode($snrsP));
                     foreach ($snrsP as $snrs_part) {
                         if (strpos($snrs_part, 'uuid:') !== false) {
                             $this->_uuid = str_replace('uuid:', null, $snrs_part);
@@ -82,8 +95,22 @@ class Cookie
 
     public function setCookie($name, $value) {
         $string = is_array($value) ? static::_buildCookie($value) : $value;
-        $this->data[$name] = $string;
-        return setcookie($name, (string) $string, 2147483647);
+        $this->_data[$name] = $string;
+
+        if($this->_context == \Synerise\SyneriseTracker::APP_CONTEXT_SYSTEM) {
+            return true;
+        }
+
+        return setrawcookie($name, (string) $string, 2147483647, '/', $this->getHostToCookie());
+    }
+
+    private function getHostToCookie() {
+
+        if(!empty($_SERVER['HTTP_HOST'])) {
+            $server = str_replace("www.", "", $_SERVER['HTTP_HOST']);
+            return '.'.$server;
+        }
+        return null;
     }
 
     public function setUuid($uuid) {
@@ -128,16 +155,18 @@ class Cookie
         return $array;
     }
 
-    /**
-     * Returns a singleton instance
-     * @return self
-     */
-    public static function getInstance() {
-        $class = get_called_class();
-        if (!isset(self::$_instance)) {
-            self::$_instance = new $class();
+    public function setCookiesData($_cookie)
+    {
+        foreach ($_cookie as $key => $value) {
+            if("_snrs" == substr($key,0,5)) {
+                $this->_data[$key] = $value;
+            }
         }
-        return self::$_instance;
+    }
+
+    public function getSnrsCookieString()
+    {
+        return json_encode($this->_data);
     }
 
 }

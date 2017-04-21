@@ -7,17 +7,17 @@ abstract class AbstractResponse
     /**
      * @var int
      */
-    private $_responseCode;
+    protected $_responseCode;
 
     /**
      * @var string
      */
-    private $_responseDescription;
+    protected $_responseDescription;
 
     /**
      * @var string
      */
-    private $_responseMessage;
+    protected $_responseMessage;
 
     /**
      * Sets default response data

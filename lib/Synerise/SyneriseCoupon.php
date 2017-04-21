@@ -10,7 +10,7 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
 
     /**
      * Get activated coupon details
-     * 
+     *
      * @param $code
      * @return Response\ActiveCoupon
      * @throws SyneriseException
@@ -70,27 +70,25 @@ class SyneriseCoupon extends SyneriseAbstractHttpClient
     }
 
     /**
-     * @return Coupons
+     *
+     * @param type $limit
+     * @param type $offset
+     * @return boolean|\Synerise\Response\Collection\Coupon
      * @throws SyneriseException
      */
-    public function getCoupons()
+    public function getCoupons($limit = 100, $offset = 0)
     {
 
         try {
-            $response = $this->get(SyneriseAbstractHttpClient::BASE_API_URL . '/admin/coupons/');
+            $query = array(
+                'pagination[limit]' => (int) $limit,
+                'pagination[offset]' => (int) $offset,
+            );
+            
+            $response = $this->get(SyneriseAbstractHttpClient::BASE_API_URL . '/coupons/', array('query' => $query));
 
             if ($response->getStatusCode() == '200') {
-                $collection = array();
-                $json = json_decode($response->getBody(), true);
-                if(isset($json['data']) && isset($json['data']['coupons'])) {
-                    foreach($json['data']['coupons'] as $key => $item) {
-                        $collection[$key] = (new Response\Coupon($item));
-                    }
-                    return $collection;
-                } else {
-                    throw new SyneriseException('Missing "data" in API resonse.', SyneriseException::API_RESPONSE_INVALID);
-                }
-                return new Response\Coupon($json);
+                return new Response\Collection\Coupon(json_decode($response->getBody(), true));
             } else {
                 throw new SyneriseException('API Synerise not responsed 200.', SyneriseException::API_RESPONSE_ERROR);
             }
