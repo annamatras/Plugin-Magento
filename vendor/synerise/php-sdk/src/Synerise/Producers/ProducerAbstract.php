@@ -69,7 +69,7 @@ abstract class ProducerAbstract
             $message['uuid'] =  Client::getInstance()->getUuid();
         }
 
-        if(!$message['uuid']) {
+        if(empty($message['uuid'])) {
             $clientUUID = $this->getUuid();
             if(!empty($clientUUID)) {
                 $message['uuid'] = $clientUUID;

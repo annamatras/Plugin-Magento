@@ -17,7 +17,7 @@ class Synerise_Integration_Adminhtml_Synerise_OrderController extends Mage_Admin
     {
         $this->tracker = Mage::getStoreConfig('synerise_integration/tracking/code');
         $this->apiKey = Mage::getStoreConfig('synerise_integration/api/key');
-        $this->helper = $helper = Mage::helper('synerise_integration/data');                
+        $this->helper = $helper = Mage::helper('synerise_integration/tracker');
         
         try {
             $this->snr = Synerise\SyneriseTracker::getInstance([ //@todo wynieść do helpera
@@ -57,11 +57,7 @@ class Synerise_Integration_Adminhtml_Synerise_OrderController extends Mage_Admin
                 foreach($orderCollection as $order) {
 
                     // dodaj kienta
-                    $customerData = array(
-                        '$email'    => $order->getCustomerEmail(),
-                        'time'      => strtotime($order->getCreatedAt()),
-                    );
-
+                    $customerData = $this->helper->convertCustomerByOrderToDataSend($order);
 
                     $uuid = md5($order->getCustomerEmail());
                     $this->snr->client->setUuid($uuid);
@@ -93,6 +89,10 @@ class Synerise_Integration_Adminhtml_Synerise_OrderController extends Mage_Admin
                     if($response == true) {
                         $sent++;
                         $order->setData('synerise_send_at',date('Y-m-d H:i:s'))->save();
+                        if ($order->getCustomerId()) {
+                            $customer = Mage::getModel('customer/customer')->load($order->getCustomerId());
+                            $customer->setData('synerise_send_at',date('Y-m-d H:i:s'))->save();
+                        }
                     }
 
                 }

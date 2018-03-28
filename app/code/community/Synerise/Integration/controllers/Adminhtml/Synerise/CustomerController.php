@@ -17,7 +17,7 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
     {
         $this->tracker = Mage::getStoreConfig('synerise_integration/tracking/code');
         $this->apiKey = Mage::getStoreConfig('synerise_integration/api/key');
-        $this->helper = $helper = Mage::helper('synerise_integration/data');                
+        $this->helper = $helper = Mage::helper('synerise_integration/tracker');
         
         try {
             $this->snr = Synerise\SyneriseTracker::getInstance([ //@todo wynieść do helpera
@@ -41,7 +41,7 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
                 ->addAttributeToSelect('firstname')
                 ->addAttributeToSelect('lastname')
                 ->addAttributeToSelect('created_in')
-                ->addAttributeToFilter('synerise_send_at', array('null' => true), 'left');
+                ->addAttributeToFilter('synerise_send_at', '0000-00-00 00:00:00', 'left');
         
         $customerCollection->setPageSize(100);
 
