@@ -47,11 +47,7 @@ class Synerise_Integration_Adminhtml_Synerise_OrderController extends Mage_Admin
                 foreach($orderCollection as $order) {
 
                     // dodaj kienta
-                    $customerData = array(
-                        '$email'    => $order->getCustomerEmail(),
-                        'time'      => strtotime($order->getCreatedAt()),
-                    );
-
+                    $customerData = $this->helper->convertCustomerByOrderToDataSend($order);
 
                     $uuid = md5($order->getCustomerEmail());
                     $this->snr->client->setUuid($uuid);
@@ -83,6 +79,10 @@ class Synerise_Integration_Adminhtml_Synerise_OrderController extends Mage_Admin
                     if($response == true) {
                         $sent++;
                         $order->setData('synerise_send_at',date('Y-m-d H:i:s'))->save();
+                        if ($order->getCustomerId()) {
+                            $customer = Mage::getModel('customer/customer')->load($order->getCustomerId());
+                            $customer->setData('synerise_send_at',date('Y-m-d H:i:s'))->save();
+                        }
                     }
 
                 }

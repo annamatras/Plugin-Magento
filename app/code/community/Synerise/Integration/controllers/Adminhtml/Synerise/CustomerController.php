@@ -31,7 +31,7 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
                 ->addAttributeToSelect('firstname')
                 ->addAttributeToSelect('lastname')
                 ->addAttributeToSelect('created_in')
-                ->addAttributeToFilter('synerise_send_at', array('null' => true), 'left');
+                ->addAttributeToFilter('synerise_send_at', '0000-00-00 00:00:00', 'left');
         
         $customerCollection->setPageSize(100);
 
@@ -40,7 +40,7 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
         $sent = 0;
         
         if(!$customerCollection->getSize()) {
-            $this->_getSession()->addSuccess($this->helper->__('Orders already sent.'));
+            $this->_getSession()->addSuccess($this->_getHelper()->__('Orders already sent.'));
         } else {
 
             do {
@@ -75,9 +75,9 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
             } while ($currentPage <= $pages);        
 
             if($sent) {             
-                 $this->_getSession()->addSuccess($this->helper->__('%s customers sent.', $sent));
+                 $this->_getSession()->addSuccess($this->_getHelper()->__('%s customers sent.', $sent));
             } else {
-                $this->_getSession()->addError($this->helper->__('No customers sent.'));
+                $this->_getSession()->addError($this->_getHelper()->__('No customers sent.'));
             }
             
         }

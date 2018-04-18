@@ -2,7 +2,8 @@
 class Synerise_Integration_Helper_Tracker extends Mage_Core_Helper_Abstract
 {
     public $defaults = array();
-    
+    public $rootCategoryId;
+
     public function __construct()
     {
         Synerise_Integration_Helper_Autoloader::createAndRegister();
@@ -12,6 +13,8 @@ class Synerise_Integration_Helper_Tracker extends Mage_Core_Helper_Abstract
 //            'apiVersion' => '2.1.0',
             'allowFork' => (bool) Mage::getStoreConfig('synerise_integration/tracking/fork')          
         );
+
+        $this->rootCategoryId = Mage::app()->getStore()->getRootCategoryId();
     }
     
     public function getInstance($options = array())
@@ -33,15 +36,9 @@ class Synerise_Integration_Helper_Tracker extends Mage_Core_Helper_Abstract
         $quote = $quote = Mage::getSingleton('checkout/cart')->getQuote();
         $result = array();
 
-        $categoryId = null;
-        $productCategoryIds = $product->getCategoryIds();
-        if(is_array($productCategoryIds) && !empty($productCategoryIds)) {
-            $categoryId = end($productCategoryIds);
-        }
-
         $result['$quoteUUID'] = $quote->getId();
         $result['$sku'] = $product->getSku();
-        $result['$category'] = $categoryId;
+        $result['$categories'] = $this->getActiveCategoryIds($product);
         $result['$title'] = $product->getName();
         $result['$regularPrice'] = $product->getPrice();
         $result['$discountPrice'] = $product->getSpecialPrice();
@@ -176,5 +173,34 @@ class Synerise_Integration_Helper_Tracker extends Mage_Core_Helper_Abstract
     private function filterAttr($attr)
     {
         return !empty($attr)?$attr:false;
+    }
+
+    public function getActiveCategoryIds(Mage_Catalog_Model_Product $product)
+    {
+        $categories = $product->getCategoryIds();
+        $activeCategoryIds = array();
+        if($categories && count($categories)) {
+            foreach($categories as $categoryId) {
+                $activeCategoryIds = array_unique(array_merge($this->getCategoryParentIds($categoryId), $activeCategoryIds));
+            }
+        }
+
+        return array_values($activeCategoryIds);
+    }
+
+    public function getCategoryParentIds($categoryId) {
+        $category = Mage::getModel('catalog/category')->load($categoryId);
+        $path = array();
+        if(!$category || !$category->getId()) {
+            return $path;
+        }
+        do {
+            if ($category->getIsActive()) {
+                $path[] = $category->getId();
+            }
+            $category = Mage::getModel('catalog/category')->load($category->getParentId());
+        } while($category && $category->getId() && $category->getId() != $this->rootCategoryId);
+
+        return array_values($path);
     }
 }
