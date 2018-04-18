@@ -143,10 +143,7 @@ class Synerise_Integration_Helper_Autoloader
     public static function createAndRegister()
     {
         if (Mage::getStoreConfigFlag('synerise_integration/dev/register_autoloader')) {
-            $libBaseDir = Mage::getStoreConfig('synerise_integration/dev/autoloader_basepath');
-            if ($libBaseDir[0] !== '/') {
-                $libBaseDir = Mage::getBaseDir() . DS . $libBaseDir;
-            }
+            $libBaseDir = Mage::getBaseDir(Mage::getStoreConfig('synerise_integration/dev/autoloader_basepath'));
             self::createAndRegisterWithBaseDir($libBaseDir);
         }
     }
@@ -161,7 +158,7 @@ class Synerise_Integration_Helper_Autoloader
                 ->addNamespace('GuzzleHttp\Stream', $libBaseDir . '/GuzzleHttp/streams')
                 ->addNamespace('GuzzleHttp\Subscriber\Log', $libBaseDir . '/GuzzleHttp/log-subscriber')
                 ->addNamespace('Psr\Log', $libBaseDir . '/Psr/log')
-                ->addNamespace('React\Promise', $libBaseDir . '/react/promise')
+                ->addNamespace('React\Promise', $libBaseDir . '/React/promise')
                 ->addNamespace('Detection', $libBaseDir . '/MobileDetect/namespaced/Detection')
                 ->addNamespace('Synerise', $libBaseDir . '/Synerise')
                 ->register();
