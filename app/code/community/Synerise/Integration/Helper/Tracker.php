@@ -151,7 +151,9 @@ class Synerise_Integration_Helper_Tracker extends Mage_Core_Helper_Abstract
     public function convertCustomerByOrderToDataSend(Mage_Sales_Model_Order $order)
     {
         $shippingAddress = $order->getShippingAddress();
-
+        if(empty($shippingAddress)) {
+            $shippingAddress = $order->getBillingAddress();
+        }
 
         return  array(
             '$email' => $order->getCustomerEmail(),

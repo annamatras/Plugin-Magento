@@ -78,7 +78,7 @@ class SyneriseTracker extends SyneriseAbstractHttpClient
 
         $this->flushQueue();
 
-        if(isset($response) && $response->getStatusCode() == '200') {
+        if(isset($response) && substr($response->getStatusCode(),0,1) == '2') {
             return true;
         }
         return false;

@@ -31,16 +31,16 @@ class Synerise_Integration_Adminhtml_Synerise_CustomerController extends Mage_Ad
                 ->addAttributeToSelect('firstname')
                 ->addAttributeToSelect('lastname')
                 ->addAttributeToSelect('created_in')
-                ->addAttributeToFilter('synerise_send_at', '0000-00-00 00:00:00', 'left');
+                ->addAttributeToFilter('synerise_send_at', array('null' => true), 'left');
         
         $customerCollection->setPageSize(100);
 
         $pages = $customerCollection->getLastPageNumber();
         $currentPage = 1;
         $sent = 0;
-        
+
         if(!$customerCollection->getSize()) {
-            $this->_getSession()->addSuccess($this->_getHelper()->__('Orders already sent.'));
+            $this->_getSession()->addSuccess($this->_getHelper()->__('Customers already sent.'));
         } else {
 
             do {

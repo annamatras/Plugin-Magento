@@ -5,7 +5,7 @@ $installer->startSetup();
 
 $installer->run("
     ALTER TABLE {$this->getTable('sales/order')}
-        ADD `synerise_send_at` TIMESTAMP DEFAULT NULL;
+        ADD `synerise_send_at` TIMESTAMP NULL DEFAULT NULL;
 ");
 
 $setup = new Mage_Customer_Model_Entity_Setup('core_setup');
