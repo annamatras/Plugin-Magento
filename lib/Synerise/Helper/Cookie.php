@@ -3,8 +3,9 @@ namespace Synerise\Helper;
 
 class Cookie extends HelperAbstract
 {
-    const SNRS_P    = '_snrs_p';
-    const SNRS_UUID = '_snrs_uuid';
+    const SNRS_P            = '_snrs_p';
+    const SNRS_UUID         = '_snrs_uuid';
+    const SNRS_RESET_UUID   = '_snrs_reset_uuid';
 
     protected $_data = array();
 
@@ -70,6 +71,11 @@ class Cookie extends HelperAbstract
         }
         $p['emailHash'] = $hash;
         $this->setCookie(self::SNRS_P, $p);
+        return true;
+    }
+
+    public function setResetUuidFlag() {
+        $this->setCookie(self::SNRS_RESET_UUID, true);
         return true;
     }
 

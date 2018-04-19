@@ -35,13 +35,7 @@ abstract class SyneriseAbstractHttpClient extends Client
     const BASE_TCK_URL = 'https://tck.synerise.com/sdk-proxy';
 
     /** @var string */
-    const TC_HOST = 'tc.synerise.com';
-
-    /** @var string */
-    const TC_SCRIPT = 'snrs-2.0.js';
-
-    /** @var string */    
-    const JS_SDK_URL = 'https://app.synerise.com/js/sdk/synerise-javascript-sdk-latest.min.js';
+    const JS_SDK_URL = 'www.snrcdn.net/sdk/3.0/synerise-javascript-sdk.min.js';
 
     const SOURCE_DESKTOP_WEB        = 'WEB_DESKTOP';
     const SOURCE_MOBILE_APP         = 'MOBILE';
@@ -255,7 +249,7 @@ abstract class SyneriseAbstractHttpClient extends Client
 
                 if($prevHash != $emHash) {
 
-                    if($this->_cookie->setEmailHash($emHash)) {
+                    if($this->_cookie->setEmailHash($emHash) && $this->_cookie->setResetUuidFlag()) {
                         if($this->getLogger()) {
                             $this->getLogger()->notice('Email hash has been changed !');
                         }
