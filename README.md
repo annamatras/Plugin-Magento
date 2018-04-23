@@ -4,7 +4,7 @@ This plugin covers basic integration with Synersie system, including tracking an
 
 Requirements
 ------------
-- Magento >= 1.9 
+- Magento <= 1.9 
 - PHP >= 5.4
 - [Synerise SDK for PHP](https://github.com/Synerise/PHP-SDK)
 - [Guzzle, PHP HTTP client 5](https://github.com/guzzle/guzzle)
@@ -27,7 +27,7 @@ Main module provides basic helpers for API and Tracker use.
 #### Basic configuration
 1. Go to  *Synerise* --> *Integration*.
 ![Integration](img/integration.png?raw=true)
-2. Fill in your API key and *save config*.
+2. Fill in your legacy API key (Default key) and *save config*.
 ![Api key](img/api-key.png?raw=true)
 
 
