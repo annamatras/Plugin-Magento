@@ -1,10 +1,10 @@
-Synerise Magento integration
+Synerise extension for Magento 1
 =====================
 This plugin covers basic integration with Synersie system, including tracking and coupon implementation, as well as export of products, customers and orders.
+For more information please visit [Synerise Official](https://synerise.com).
 
 Requirements
 ------------
-- Magento <= 1.9 
 - PHP >= 5.4
 - [Synerise SDK for PHP](https://github.com/Synerise/PHP-SDK)
 - [Guzzle, PHP HTTP client 5](https://github.com/guzzle/guzzle)
